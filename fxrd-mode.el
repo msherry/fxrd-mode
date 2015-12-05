@@ -57,6 +57,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst tso6-spec
+  ;; Header Record
   '(("H" (
           (1 1 "Record Type (H)")
           (2 9 "Record Date")
@@ -64,6 +65,7 @@
           (16 26 "Member ICA")
           (27 86 "File Name")
           (87 201 "Filler")))
+    ;; Data Record
     ("D" (
           (1 1 "Record Type (D)")
           (2 31 "Bank Customer Number")
@@ -76,6 +78,7 @@
           (137 144 "Rebate File Sent Date")
           (145 157 "Transaction Sequence Number")
           (157 201 "Filler")))
+    ;; Trailer Record
     ("T" (
           (1 1 "Record Type (T)")
           (2 13 "Exception Record Count")
@@ -83,6 +86,82 @@
           (26 37 "Total Processed Record Count")
           (38 48 "Member ICA")
           (49 201 "Filler")))))
+
+(defconst nacha-spec
+  ;; File Header Record
+  '(("1" (
+          (1 1 "Record Type (1)" "1")
+          (2 3 "Priority Code" "N")
+          (4 13 "Immediate Destination")
+          (14 23 "Immediate Origin")
+          (24 29 "File Creation Date")
+          (30 33 "File Creation Time")
+          (34 34 "File ID Modifier")
+          (35 37 "Record Size")
+          (38 39 "Blocking Factor")
+          (40 40 "Format Code")
+          (41 63 "Immediate Destination Name")
+          (64 86 "Immediate Origin Name")
+          (87 94 "Reference Code")))
+    ;; Batch Header Record
+    ("5" (
+          (1 1 "Record Type (5)")
+          (2 4 "Service Class Code")
+          (5 20 "Company Name")
+          (21 40 "Company Discretionary Data")
+          (41 50 "Company Identification")
+          (51 53 "Standard Entry Class Code")
+          (54 63 "Company Entry Description")
+          (64 69 "Company Descriptive Date")
+          (70 75 "Effective Entry Date")
+          (76 78 "Settlement Date")
+          (79 79 "Originator Status Code")
+          (80 87 "Originating DFI Identification")
+          (88 94 "Batch Number")))
+    ;; Entry Detail Record/Report
+    ("6" (
+          (1 1 "Record Type (6)")
+          ;; TODO: transaction code parsing/descriptions
+          (2 3 "Transaction Code")
+          (4 11 "Receiving DFI Identification")
+          (12 12 "Check Digit")
+          (13 29 "DFI Account Number")
+          (30 39 "Amount")
+          (40 54 "Individual Identification Number")
+          (55 76 "Individual Name")
+          (77 78 "Discretionary Data")
+          (79 79 "Addenda Record Indicator")
+          (80 94 "Trace Number")))
+    ;; CCD Addenda Record
+    ("7" (
+          (1 1 "Record Type (7)")
+          (2 3 "Addenda Type Code")
+          (4 83 "Payment Related Information")
+          (84 87 "Addenda Sequence Number")
+          (88 94 "Entry Detail Sequence Number")))
+    ;; Batch Control Record
+    ("8" (
+          (1 1 "Record Type (8)")
+          (2 4 "Service Class Code")
+          (5 10 "Entry/Addenda Count")
+          (11 20 "Entry Hash")
+          (21 32 "Total Debit Entry Dollar Amount")
+          (33 44 "Total Credit Entry Dollar Amount")
+          (45 54 "Company Identification")
+          (55 73 "Message Authentication Code")
+          (74 79 "Reserved")
+          (80 87 "Originating DFI Identification")
+          (88 94 "Batch Number")))
+    ;; File Control Record
+    ("9" (
+          (1 1 "Record Type (9)")
+          (2 7 "Batch Count")
+          (8 13 "Block Count")
+          (14 21 "Entry/Addenda Count")
+          (22 31 "Entry Hash")
+          (32 43 "Total Debit Entry Dollar Amount in File")
+          (44 55 "Total Credit Entry Dollar Amount in File")
+          (56 94 "Reserved")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -135,10 +214,11 @@ Returns nil if no hit found"
         ;; TODO: find a better way to find position within a line
         (let ((line-pos (current-line-pos)))
           (let* ((line-start (line-beginning-position))
-                 (spec-item (first-spec-hit record-spec line-pos))
-                 (start (1- (+ line-start (nth 0 spec-item))))
-                 (end (+ line-start (nth 1 spec-item))))
-            (list start end))))))
+                 (spec-item (first-spec-hit record-spec line-pos)))
+            (when spec-item
+              (let ((start (1- (+ line-start (nth 0 spec-item))))
+                    (end (+ line-start (nth 1 spec-item))))
+                (list start end))))))))
 
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-overlay t))
@@ -157,12 +237,14 @@ Returns nil if no hit found"
 (defun previous-field ()
   "Move to the start of the previous field."
   (interactive)
-  (let* ((field-boundaries (current-field-boundaries))
-         (prev-field-end (1- (nth 0 field-boundaries))))
-    (goto-char (max prev-field-end (point-min)))
-    (let* ((prev-field-boundaries (current-field-boundaries))
-           (begin (nth 0 prev-field-boundaries)))
-      (goto-char begin))))
+  (let ((field-boundaries (current-field-boundaries)))
+    (when field-boundaries
+      (let ((prev-field-end (1- (nth 0 field-boundaries))))
+        (goto-char (max prev-field-end (point-min)))
+        (let ((prev-field-boundaries (current-field-boundaries)))
+          (when prev-field-boundaries
+            (let ((begin (nth 0 prev-field-boundaries)))
+              (goto-char begin))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -230,20 +312,20 @@ Called by `fxrd-field-name-idle-timer'."
                                             'help-echo fxrd-mode-line-help-echo)))
           (force-mode-line-update)
           ;; Highlight current field
-          (remove-overlays nil nil 'fxrd-overlay t)
-          (let* ((line-start (line-beginning-position))
-                 (begin (nth 0 field-boundaries))
-                 (end (nth 1 field-boundaries))
-                 (overlay (make-overlay begin end)))
-            (overlay-put overlay 'fxrd-overlay t)
-            (overlay-put overlay 'face fxrd-current-field-face))))))
+          (when field-boundaries
+            (remove-overlays nil nil 'fxrd-overlay t)
+            (let* ((line-start (line-beginning-position))
+                   (begin (nth 0 field-boundaries))
+                   (end (nth 1 field-boundaries))
+                   (overlay (make-overlay begin end)))
+              (overlay-put overlay 'fxrd-overlay t)
+              (overlay-put overlay 'face fxrd-current-field-face)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Entry point
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;###autoload
 (define-derived-mode fxrd-mode nil "FXRD"
   "Major mode for editing fixed field width files.
 
@@ -252,8 +334,11 @@ Called by `fxrd-field-name-idle-timer'."
   :syntax-table fxrd-mode-syntax-table
   (use-local-map fxrd-mode-map)
   (set (make-local-variable 'font-lock-defaults) '(fxrd-font-lock-keywords))
+  (set (make-local-variable 'mode-line-format) fxrd-mode-line-format)
+  (set (make-local-variable 'show-trailing-whitespace) nil)
   (fxrd-field-name-mode 1)
   (overwrite-mode)
+  (remove-hook 'before-save-hook 'delete-trailing-whitespace)
   (add-hook (make-local-variable 'change-major-mode-hook) 'disable-fxrd-mode))
 
 ;;;###autoload
@@ -262,5 +347,12 @@ Called by `fxrd-field-name-idle-timer'."
 
 \\{fxrd-mode-map}"
   (setq fxrd-current-spec tso6-spec))
+
+;;;###autoload
+(define-derived-mode nacha-mode fxrd-mode "NACHA"
+  "Major mode for editing NACHA fixed field width files.
+
+\\{fxrd-mode-map}"
+  (setq fxrd-current-spec nacha-spec))
 
 (provide 'fxrd-mode)
