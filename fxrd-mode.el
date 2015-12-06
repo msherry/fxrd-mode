@@ -1,3 +1,36 @@
+;;; fxrd-mode.el --- Major mode for editing fixed field width files
+
+;; Copyright (C) 2015 Marc Sherry
+
+;; Author: Marc Sherry (msherry@gmail.com)
+;; URL: https://github.com/msherry/fxrd-mode
+
+
+;;; Commentary:
+
+;; This package implements fxrd mode, a major mode for editing files with fixed
+;; field widths. These files are commonly used in the financial industry, such
+;; as in ACH transactions. This package provides:
+
+;; nacha-mode: a mode for editing NACHA files
+;; tso6-mode: a mode for editing TSO6 files
+
+;; In each of these modes, the following commands are available:
+
+;; - M-<right> (`next-field') and M-<left> (`previous-field') move to the next
+;;   and previous fields, respectively.
+
+;; This mode also provides validation of fields -- valid fields are highlighted
+;; with `fxrd-current-field-face', while invalid fields are highlighted with
+;; `fxrd-invalid-field-face' (both customizable)
+
+;; Installation:
+
+;; Put this file where Emacs can find it (on your `load-path' somewhere, and
+;; add the following to your .emacs/init.el file:
+
+;; (require 'fxrd-autoloads)
+
 (defgroup FXRD nil
   "Major mode for editing fixed field width files"
   :group 'convenience)
@@ -396,9 +429,9 @@ Called by `fxrd-field-name-idle-timer'."
 
 ;;;###autoload
 (define-derived-mode nacha-mode fxrd-mode "NACHA"
-  "Major mode for editing NACHA fixed field width files.
+"Major mode for editing NACHA fixed field width files.
 
 \\{fxrd-mode-map}"
-  (setq fxrd-current-spec nacha-spec))
+(setq fxrd-current-spec nacha-spec))
 
 (provide 'fxrd-mode)
