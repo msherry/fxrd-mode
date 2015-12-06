@@ -29,6 +29,8 @@
 ;; Put this file where Emacs can find it (on your `load-path' somewhere, and
 ;; add the following to your .emacs/init.el file:
 
+;;; Code:
+
 ;; (require 'fxrd-autoloads)
 
 (defgroup FXRD nil
