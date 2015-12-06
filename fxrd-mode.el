@@ -469,3 +469,4 @@ Called by `fxrd-field-name-idle-timer'."
 (setq fxrd-current-spec nacha-spec))
 
 (provide 'fxrd-mode)
+;;; fxrd-mode.el ends here
