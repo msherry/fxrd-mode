@@ -266,7 +266,12 @@ Returns nil if no hit found"
       (get-name-from-field-spec field-spec))))
 
 (defun current-field-boundaries ()
-  "Find the (absolute) start and end position of the field at the current position."
+  "Find the (absolute) [start, end + 1] position of the field at
+the current position.
+
+`end' will actually be one more than the final position of the
+field, due to the way most elisp functions (make-overlay,
+buffer-substring, etc.) handle ranges."
   (let ((field-spec (get-current-field-spec)))
     (when field-spec
       (let* ((line-start (line-beginning-position))
@@ -425,8 +430,9 @@ Called by `fxrd-field-name-idle-timer'."
                (when field-boundaries
                  (let ((begin (nth 0 field-boundaries))
                        (end (nth 1 field-boundaries)))
-                   ;; Skip current field, it will be handled elsewhere
-                   (when (and (not (<= begin cur-pos end))
+                   ;; Skip current field, it will be handled
+                   ;; elsewhere. Remember to account for `end' being off by one
+                   (when (and (not (<= begin cur-pos (1- end)))
                               (not (current-field-valid-p)))
                      (let ((overlay (make-overlay begin end)))
                        (overlay-put overlay 'fxrd-invalid-overlay t)
