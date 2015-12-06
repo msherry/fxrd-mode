@@ -19,7 +19,19 @@ In each of these modes, the following commands are available:
 
 This mode also provides validation of fields -- valid fields are highlighted
 with `fxrd-current-field-face`, while invalid fields are highlighted with
-`fxrd-invalid-field-face` (both customizable)
+`fxrd-invalid-field-face` (both customizable). The current field name is 
+also displayed in the modeline.
+
+### Examples
+
+Current field highlighted:
+![Current field highlighted](http://i.imgur.com/NTZb6Fl.png)
+
+Current field invalid:
+![Current field invalid](http://i.imgur.com/EStvzML.png)
+
+All invalid fields highlighted:
+![ALl invalid fields highlighted](http://i.imgur.com/ig9BnNZ.png)
 
 ## Installation
 
