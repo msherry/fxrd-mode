@@ -23,7 +23,7 @@ with `fxrd-current-field-face`, while invalid fields are highlighted with
 
 ## Installation
 
-Put this file where Emacs can find it (on your `load-path' somewhere, and
+Put this file where Emacs can find it (on your `load-path` somewhere), and
 add the following to your .emacs/init.el file:
 
 ```lisp
