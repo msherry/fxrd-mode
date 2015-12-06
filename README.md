@@ -4,12 +4,12 @@ Emacs major mode for working fixed-field-width files (NACHA, TSO6, RM39, etc.)
 Copyright (C) 2015 Marc Sherry
 
 ## Summary
-This package implements fxrd mode, a major mode for editing files with fixed
+This package implements `fxrd-mode`, a major mode for editing files with fixed
 field widths. These files are commonly used in the financial industry, such
 as in ACH transactions. This package provides:
 
-nacha-mode: a mode for editing NACHA files
-tso6-mode: a mode for editing TSO6 files
+- `nacha-mode`: a mode for editing NACHA files
+- `tso6-mode`: a mode for editing TSO6 files
 
 ## Usage
 In each of these modes, the following commands are available:
