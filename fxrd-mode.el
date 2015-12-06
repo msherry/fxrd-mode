@@ -9,6 +9,14 @@
   :group 'FXRD)
 (defvar fxrd-current-field-face 'fxrd-current-field-face)
 
+(defface fxrd-invalid-field-face
+  '((t (:inherit highlight
+        :background "red")))
+  "Face for fields failing validation."
+  :group 'FXRD)
+(defvar fxrd-invalid-field-face 'fxrd-invalid-field-face)
+
+
 (defconst fxrd-mode-line-help-echo
   ;; See bindings.el for details of `mode-line-format' construction.
   (get-text-property 0 'help-echo (car default-mode-line-format))
@@ -53,115 +61,121 @@
   (fxrd-clear-overlays))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Imports
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'fxrd-validators)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Fxrd file specifications
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst tso6-spec
   ;; Header Record
-  '(("H" (
-          (1 1 "Record Type (H)")
-          (2 9 "Record Date")
-          (10 15 "Record Time")
-          (16 26 "Member ICA")
-          (27 86 "File Name")
-          (87 201 "Filler")))
+  `(("H" (
+          (1 1 "Record Type (H)" ,(fxrd-const "H"))
+          (2 9 "Record Date" fxrd-numeric)
+          (10 15 "Record Time" fxrd-numeric)
+          (16 26 "Member ICA" fxrd-numeric)
+          (27 86 "File Name" fxrd-alphanumeric)
+          (87 201 "Filler" fxrd-alphanumeric)))
     ;; Data Record
     ("D" (
-          (1 1 "Record Type (D)")
-          (2 31 "Bank Customer Number")
-          (32 50 "Bank Account Number")
-          (51 70 "Bank Product Code")
-          (71 92 "Transaction Description")
-          (93 105 "Rebate Amount")
-          (106 106 "Exception Reason Code")
-          (107 136 "Exception Reason Description")
-          (137 144 "Rebate File Sent Date")
-          (145 157 "Transaction Sequence Number")
-          (157 201 "Filler")))
+          (1 1 "Record Type (D)" ,(fxrd-const "D"))
+          (2 31 "Bank Customer Number" fxrd-alphanumeric)
+          (32 50 "Bank Account Number" fxrd-padded-numeric)
+          (51 70 "Bank Product Code" fxrd-alphanumeric)
+          (71 92 "Transaction Description" fxrd-alphanumeric)
+          (93 105 "Rebate Amount" fxrd-padded-decimal-numeric)
+          (106 106 "Exception Reason Code" fxrd-alphanumeric) ;TODO: enums
+          (107 136 "Exception Reason Description" fxrd-alphanumeric)
+          (137 144 "Rebate File Sent Date" fxrd-numeric) ;TODO: date
+          ;; NOTE: Mastercard's spec says numeric, but they allow alphanumerics
+          (145 157 "Transaction Sequence Number" fxrd-alphanumeric)
+          (157 201 "Filler" fxrd-alphanumeric)))
     ;; Trailer Record
     ("T" (
-          (1 1 "Record Type (T)")
-          (2 13 "Exception Record Count")
-          (14 25 "Success Record Count")
-          (26 37 "Total Processed Record Count")
-          (38 48 "Member ICA")
-          (49 201 "Filler")))))
+          (1 1 "Record Type (T)" ,(fxrd-const "T"))
+          (2 13 "Exception Record Count" fxrd-numeric)
+          (14 25 "Success Record Count" fxrd-numeric)
+          (26 37 "Total Processed Record Count" fxrd-numeric)
+          (38 48 "Member ICA" fxrd-numeric)
+          (49 201 "Filler" fxrd-alphanumeric)))))
 
 (defconst nacha-spec
   ;; File Header Record
-  '(("1" (
-          (1 1 "Record Type (1)" "1")
-          (2 3 "Priority Code" "N")
-          (4 13 "Immediate Destination")
-          (14 23 "Immediate Origin")
-          (24 29 "File Creation Date")
-          (30 33 "File Creation Time")
-          (34 34 "File ID Modifier")
-          (35 37 "Record Size")
-          (38 39 "Blocking Factor")
-          (40 40 "Format Code")
-          (41 63 "Immediate Destination Name")
-          (64 86 "Immediate Origin Name")
-          (87 94 "Reference Code")))
+  `(("1" (
+          (1 1 "Record Type (1)" ,(fxrd-const "1"))
+          (2 3 "Priority Code" fxrd-numeric)
+          (4 13 "Immediate Destination" fxrd-padded-numeric)
+          (14 23 "Immediate Origin" fxrd-numeric)
+          (24 29 "File Creation Date" fxrd-numeric) ;TODO: date type
+          (30 33 "File Creation Time" fxrd-numeric) ;TODO: time type
+          (34 34 "File ID Modifier" fxrd-alphanumeric)
+          (35 37 "Record Size" fxrd-numeric) ;TODO: constant (94, zero-padded)
+          (38 39 "Blocking Factor" fxrd-numeric) ;TODO: constant 10
+          (40 40 "Format Code" ,(fxrd-const "1"))
+          (41 63 "Immediate Destination Name" fxrd-alphanumeric)
+          (64 86 "Immediate Origin Name" fxrd-alphanumeric)
+          (87 94 "Reference Code" fxrd-alphanumeric)))
     ;; Batch Header Record
     ("5" (
-          (1 1 "Record Type (5)")
-          (2 4 "Service Class Code")
-          (5 20 "Company Name")
-          (21 40 "Company Discretionary Data")
-          (41 50 "Company Identification")
-          (51 53 "Standard Entry Class Code")
-          (54 63 "Company Entry Description")
-          (64 69 "Company Descriptive Date")
-          (70 75 "Effective Entry Date")
-          (76 78 "Settlement Date")
-          (79 79 "Originator Status Code")
-          (80 87 "Originating DFI Identification")
-          (88 94 "Batch Number")))
+          (1 1 "Record Type (5)" ,(fxrd-const "5"))
+          (2 4 "Service Class Code" fxrd-numeric)   ;TODO: enums
+          (5 20 "Company Name" fxrd-alphanumeric)
+          (21 40 "Company Discretionary Data" fxrd-alphanumeric)
+          (41 50 "Company Identification" fxrd-alphanumeric)
+          (51 53 "Standard Entry Class Code" fxrd-alphanumeric) ;TODO: enums
+          (54 63 "Company Entry Description" fxrd-alphanumeric)
+          (64 69 "Company Descriptive Date" fxrd-alphanumeric)
+          (70 75 "Effective Entry Date" fxrd-numeric)
+          (76 78 "Settlement Date" fxrd-alphanumeric)
+          (79 79 "Originator Status Code" ,(fxrd-const "1"))
+          (80 87 "Originating DFI Identification" fxrd-numeric)
+          (88 94 "Batch Number" fxrd-numeric)))
     ;; Entry Detail Record/Report
     ("6" (
-          (1 1 "Record Type (6)")
+          (1 1 "Record Type (6)" ,(fxrd-const "6"))
           ;; TODO: transaction code parsing/descriptions
-          (2 3 "Transaction Code")
-          (4 11 "Receiving DFI Identification")
-          (12 12 "Check Digit")
-          (13 29 "DFI Account Number")
-          (30 39 "Amount")
-          (40 54 "Individual Identification Number")
-          (55 76 "Individual Name")
-          (77 78 "Discretionary Data")
-          (79 79 "Addenda Record Indicator")
-          (80 94 "Trace Number")))
+          (2 3 "Transaction Code" fxrd-numeric) ;TODO: enums
+          (4 11 "Receiving DFI Identification" fxrd-numeric)
+          (12 12 "Check Digit" fxrd-numeric)
+          (13 29 "DFI Account Number" fxrd-alphanumeric) ;TODO: alignment/padding
+          (30 39 "Amount" fxrd-numeric)
+          (40 54 "Individual Identification Number" fxrd-alphanumeric)
+          (55 76 "Individual Name" fxrd-alphanumeric)
+          (77 78 "Discretionary Data" fxrd-alphanumeric)
+          (79 79 "Addenda Record Indicator" fxrd-numeric)
+          (80 94 "Trace Number" fxrd-numeric)))
     ;; CCD Addenda Record
     ("7" (
-          (1 1 "Record Type (7)")
-          (2 3 "Addenda Type Code")
-          (4 83 "Payment Related Information")
-          (84 87 "Addenda Sequence Number")
-          (88 94 "Entry Detail Sequence Number")))
+          (1 1 "Record Type (7)" ,(fxrd-const "7"))
+          (2 3 "Addenda Type Code" ,(fxrd-const "05"))
+          (4 83 "Payment Related Information" fxrd-alphanumeric)
+          (84 87 "Addenda Sequence Number" fxrd-numeric)
+          (88 94 "Entry Detail Sequence Number" fxrd-numeric)))
     ;; Batch Control Record
     ("8" (
-          (1 1 "Record Type (8)")
-          (2 4 "Service Class Code")
-          (5 10 "Entry/Addenda Count")
-          (11 20 "Entry Hash")
-          (21 32 "Total Debit Entry Dollar Amount")
-          (33 44 "Total Credit Entry Dollar Amount")
-          (45 54 "Company Identification")
-          (55 73 "Message Authentication Code")
-          (74 79 "Reserved")
-          (80 87 "Originating DFI Identification")
-          (88 94 "Batch Number")))
+          (1 1 "Record Type (8)" ,(fxrd-const "8"))
+          (2 4 "Service Class Code" fxrd-numeric)
+          (5 10 "Entry/Addenda Count" fxrd-numeric)
+          (11 20 "Entry Hash" fxrd-numeric)
+          (21 32 "Total Debit Entry Dollar Amount" fxrd-numeric)
+          (33 44 "Total Credit Entry Dollar Amount" fxrd-numeric)
+          (45 54 "Company Identification" fxrd-alphanumeric)
+          (55 73 "Message Authentication Code" fxrd-alphanumeric) ;TODO: reserved
+          (74 79 "Reserved" fxrd-alphanumeric)
+          (80 87 "Originating DFI Identification" fxrd-numeric)
+          (88 94 "Batch Number" fxrd-numeric)))
     ;; File Control Record
     ("9" (
-          (1 1 "Record Type (9)")
-          (2 7 "Batch Count")
-          (8 13 "Block Count")
-          (14 21 "Entry/Addenda Count")
-          (22 31 "Entry Hash")
-          (32 43 "Total Debit Entry Dollar Amount in File")
-          (44 55 "Total Credit Entry Dollar Amount in File")
-          (56 94 "Reserved")))))
+          (1 1 "Record Type (9)" ,(fxrd-const "9"))
+          (2 7 "Batch Count" fxrd-numeric)
+          (8 13 "Block Count" fxrd-numeric)
+          (14 21 "Entry/Addenda Count" fxrd-numeric)
+          (22 31 "Entry Hash" fxrd-numeric)
+          (32 43 "Total Debit Entry Dollar Amount in File" fxrd-numeric)
+          (44 55 "Total Credit Entry Dollar Amount in File" fxrd-numeric)
+          (56 94 "Reserved" fxrd-alphanumeric)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,6 +184,7 @@
 
 (defun current-line-pos ()
   "Yields the current position within the line"
+  ;; TODO: find a better way to find position within a line
   (+ 1 (- (point) (line-beginning-position))))
 
 (defun get-spec-for-line ()
@@ -189,9 +204,13 @@ Returns nil if no hit found"
       (when (and (<= start pos end))
         (return spec-item)))))
 
-(defun get-name-from-spec-item (spec-item)
-  "Given a spec item, extract the name part."
-  (nth 2 spec-item))
+(defun get-name-from-field-spec (field-spec)
+  "Given a field spec, extract the name part."
+  (nth 2 field-spec))
+
+(defun get-validator-from-field-spec (field-spec)
+  "Given a field spec, extract the validator, if present"
+  (nth 3 field-spec))
 
 (defun line-type ()
   "Determines the record type of the current line"
@@ -199,26 +218,42 @@ Returns nil if no hit found"
          (type (if char (char-to-string char))))
     type))
 
-(defun current-field-name ()
-  "Find the name of the field at the current position in the current line."
+(defun get-current-field-spec ()
   (let ((record-spec (get-spec-for-line)))
     (if record-spec
-        ;; TODO: find a better way to find position within a line
-        (let ((line-pos (current-line-pos)))
-          (get-name-from-spec-item (first-spec-hit record-spec line-pos))))))
+        (let ((field-spec (first-spec-hit record-spec (current-line-pos))))
+          field-spec))))
+
+(defun current-field-name ()
+  "Find the name of the field at the current position in the current line."
+  (let ((field-spec (get-current-field-spec)))
+    (when field-spec
+      (get-name-from-field-spec field-spec))))
 
 (defun current-field-boundaries ()
   "Find the (absolute) start and end position of the field at the current position."
-  (let ((record-spec (get-spec-for-line)))
-    (if record-spec
-        ;; TODO: find a better way to find position within a line
-        (let ((line-pos (current-line-pos)))
-          (let* ((line-start (line-beginning-position))
-                 (spec-item (first-spec-hit record-spec line-pos)))
-            (when spec-item
-              (let ((start (1- (+ line-start (nth 0 spec-item))))
-                    (end (+ line-start (nth 1 spec-item))))
-                (list start end))))))))
+  (let ((field-spec (get-current-field-spec)))
+    (when field-spec
+      (let* ((line-start (line-beginning-position))
+             (start (1- (+ line-start (nth 0 field-spec))))
+             (end (+ line-start (nth 1 field-spec))))
+        (list start end)))))
+
+(defun current-field-value ()
+  "Find the contents of the current field"
+  (let* ((field-boundaries (current-field-boundaries))
+         (start (nth 0 field-boundaries))
+         (end (nth 1 field-boundaries)))
+    (when (and start end)
+      (buffer-substring start end))))
+
+(defun current-field-valid-p ()
+  (let* ((field-spec (get-current-field-spec))
+         (validator (get-validator-from-field-spec field-spec))
+         (value (current-field-value)))
+    (when validator
+        (cond ((functionp validator) (funcall validator value))
+              (t nil)))))
 
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-overlay t))
@@ -264,6 +299,11 @@ Returns nil if no hit found"
 (defvar fxrd-field-name-string-old nil)
 (make-variable-buffer-local 'fxrd-field-name-string-old)
 
+(defvar fxrd-field-value-old
+  "The last computed field value"
+  nil)
+(make-variable-buffer-local 'fxrd-field-value-old)
+
 (define-minor-mode fxrd-field-name-mode
   "Toggle FXRD-field-name mode.
 When enabled, the name of the current field appears in the mode line."
@@ -303,23 +343,29 @@ When enabled, the name of the current field appears in the mode line."
 Called by `fxrd-field-name-idle-timer'."
   (if (derived-mode-p 'fxrd-mode)
       (let ((field-name (current-field-name))
-            (field-boundaries (current-field-boundaries)))
+            (field-boundaries (current-field-boundaries))
+            (field-value (current-field-value)))
         (when (not (string= field-name fxrd-field-name-string-old))
           ;; Update modeline
           (setq fxrd-field-name-string-old field-name
                 fxrd-field-name-string
                 (and field-name (propertize (format "%s" field-name)
                                             'help-echo fxrd-mode-line-help-echo)))
-          (force-mode-line-update)
-          ;; Highlight current field
-          (when field-boundaries
-            (remove-overlays nil nil 'fxrd-overlay t)
-            (let* ((line-start (line-beginning-position))
-                   (begin (nth 0 field-boundaries))
-                   (end (nth 1 field-boundaries))
-                   (overlay (make-overlay begin end)))
-              (overlay-put overlay 'fxrd-overlay t)
-              (overlay-put overlay 'face fxrd-current-field-face)))))))
+          (force-mode-line-update))
+        ;; Highlight current field
+        (when (and field-boundaries
+                   (not (string= fxrd-field-value-old
+                                 field-value)))
+          (setq fxrd-field-value-old field-value)
+          (remove-overlays nil nil 'fxrd-overlay t)
+          (let* ((line-start (line-beginning-position))
+                 (begin (nth 0 field-boundaries))
+                 (end (nth 1 field-boundaries))
+                 (overlay (make-overlay begin end)))
+            (overlay-put overlay 'fxrd-overlay t)
+            (overlay-put overlay 'face
+                         (cond ((current-field-valid-p) fxrd-current-field-face)
+                               (t fxrd-invalid-field-face))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
