@@ -289,7 +289,9 @@ Returns nil if no hit found"
               (t nil)))))
 
 (defun fxrd-clear-overlays ()
-  (remove-overlays nil nil 'fxrd-overlay t))
+  (remove-overlays nil nil 'fxrd-current-overlay t)
+  (remove-overlays nil nil 'fxrd-invalid-overlay t)
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -298,9 +300,10 @@ Returns nil if no hit found"
 (defun next-field ()
   "Move to the start of the next field."
   (interactive)
-  (let* ((field-boundaries (current-field-boundaries))
-         (next-field-start (nth 1 field-boundaries)))
-    (goto-char (min next-field-start (point-max)))))
+  (let ((field-boundaries (current-field-boundaries)))
+    (when field-boundaries
+      (let ((next-field-start (nth 1 field-boundaries)))
+        (goto-char (min next-field-start (point-max)))))))
 
 (defun previous-field ()
   "Move to the start of the previous field."
@@ -333,9 +336,14 @@ Returns nil if no hit found"
 (make-variable-buffer-local 'fxrd-field-name-string-old)
 
 (defvar fxrd-field-value-old
-  "The last computed field value"
+  "The last computed value of the current field"
   nil)
 (make-variable-buffer-local 'fxrd-field-value-old)
+
+(defvar fxrd-point-old
+  "The last point"
+  nil)
+(make-variable-buffer-local 'fxrd-point-old)
 
 (define-minor-mode fxrd-field-name-mode
   "Toggle FXRD-field-name mode.
@@ -359,7 +367,7 @@ When enabled, the name of the current field appears in the mode line."
                           (buffer-list)))
           (setq fxrd-field-name-idle-timer
                 (run-with-idle-timer fxrd-field-name-delay t
-                                     'fxrd-field-name-display)))
+                                     'fxrd-update-current-field)))
     ;; but if the mode is off then remove the display from the mode lines of
     ;; all FXRD buffers
     (mapc (lambda (buffer)
@@ -371,34 +379,60 @@ When enabled, the name of the current field appears in the mode line."
                 (fxrd-clear-overlays))))
           (buffer-list))))
 
-(defun fxrd-field-name-display ()
+(defun fxrd-update-current-field ()
   "Construct `fxrd-field-name-string' to display in mode line.
 Called by `fxrd-field-name-idle-timer'."
-  (if (derived-mode-p 'fxrd-mode)
-      (let ((field-name (current-field-name))
-            (field-boundaries (current-field-boundaries))
-            (field-value (current-field-value)))
-        (when (not (string= field-name fxrd-field-name-string-old))
-          ;; Update modeline
-          (setq fxrd-field-name-string-old field-name
-                fxrd-field-name-string
-                (and field-name (propertize (format "%s" field-name)
-                                            'help-echo fxrd-mode-line-help-echo)))
-          (force-mode-line-update))
-        ;; Highlight current field
-        (when (and field-boundaries
-                   (not (string= fxrd-field-value-old
-                                 field-value)))
-          (setq fxrd-field-value-old field-value)
-          (remove-overlays nil nil 'fxrd-overlay t)
-          (let* ((line-start (line-beginning-position))
-                 (begin (nth 0 field-boundaries))
-                 (end (nth 1 field-boundaries))
-                 (overlay (make-overlay begin end)))
-            (overlay-put overlay 'fxrd-overlay t)
-            (overlay-put overlay 'face
-                         (cond ((current-field-valid-p) fxrd-current-field-face)
-                               (t fxrd-invalid-field-face))))))))
+  (when (derived-mode-p 'fxrd-mode)
+    (let ((field-name (current-field-name))
+          (field-boundaries (current-field-boundaries))
+          (field-value (current-field-value)))
+      (when (not (string= field-name fxrd-field-name-string-old))
+        ;; Update modeline
+        (setq fxrd-field-name-string-old field-name
+              fxrd-field-name-string
+              (and field-name (propertize (format "%s" field-name)
+                                          'help-echo fxrd-mode-line-help-echo)))
+        (force-mode-line-update))
+      ;; Highlight current field
+      (when (and field-boundaries
+                 (not (string= fxrd-field-value-old
+                               field-value)))
+        (setq fxrd-field-value-old field-value)
+        (remove-overlays nil nil 'fxrd-current-overlay t)
+        (let* ((begin (nth 0 field-boundaries))
+               (end (nth 1 field-boundaries))
+               (overlay (make-overlay begin end)))
+          (overlay-put overlay 'fxrd-current-overlay t)
+          (overlay-put overlay 'face
+                       (cond ((current-field-valid-p) fxrd-current-field-face)
+                             (t fxrd-invalid-field-face))))))
+    (fxrd-highlight-invalid-fields)))
+
+(defun fxrd-highlight-invalid-fields ()
+  "Highlight all invalid fields (except current field)"
+  (when (not (eq fxrd-point-old (point)))
+      (setq fxrd-point-old (point))
+      (let ((cur-pos (point)))
+        (save-mark-and-excursion
+         (goto-char (point-min))
+         (remove-overlays nil nil 'fxrd-invalid-overlay t)
+         (let ((done nil)
+               (last-pos (point)))
+           (while (not done)
+             (let ((field-boundaries (current-field-boundaries)))
+               (when field-boundaries
+                 (let ((begin (nth 0 field-boundaries))
+                       (end (nth 1 field-boundaries)))
+                   ;; Skip current field, it will be handled elsewhere
+                   (when (and (not (<= begin cur-pos end))
+                              (not (current-field-valid-p)))
+                     (let ((overlay (make-overlay begin end)))
+                       (overlay-put overlay 'fxrd-invalid-overlay t)
+                       (overlay-put overlay 'face fxrd-invalid-field-face))))))
+             (next-field)
+             (if (eq (point) last-pos)
+                 (setq done t))
+             (setq last-pos (point))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
