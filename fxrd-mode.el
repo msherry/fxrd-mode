@@ -51,7 +51,6 @@
   :group 'FXRD)
 (defvar fxrd-invalid-field-face 'fxrd-invalid-field-face)
 
-
 (defconst fxrd-mode-line-help-echo
   ;; See bindings.el for details of `mode-line-format' construction.
   (get-text-property 0 'help-echo (car default-mode-line-format))
@@ -307,7 +306,8 @@ buffer-substring, etc.) handle ranges."
 (defun next-field ()
   "Move to the start of the next field."
   (interactive)
-  (let ((field-boundaries (current-field-boundaries)))
+  (let ((field-boundaries (or (current-field-boundaries)
+                              (list (1+ (point)) (1+ (point))))))
     (when field-boundaries
       (let ((next-field-start (nth 1 field-boundaries)))
         (goto-char (min next-field-start (point-max)))))))
