@@ -1,5 +1,6 @@
 # fxrd-mode
-Emacs major mode for working fixed-field-width files (NACHA, TSO6, RM39, etc.)
+Emacs major mode for working with fixed-field-width files (NACHA, TSO6, RM39,
+etc.)
 
 Copyright (C) 2015 Marc Sherry
 
@@ -8,8 +9,9 @@ This package implements `fxrd-mode`, a major mode for editing files with fixed
 field widths. These files are commonly used in the financial industry, such
 as in ACH transactions. This package provides:
 
-- `nacha-mode`: a mode for editing NACHA files
-- `tso6-mode`: a mode for editing TSO6 files
+- `nacha-mode`: a mode for editing NACHA (ACH transaction) files
+- `rm37-mode`: a mode for editing RM37 (Mastercard rebate transaction) files
+- `tso6-mode`: a mode for editing TSO6 (Mastercard rebate confirmation) files
 
 ## Usage
 In each of these modes, the following commands are available:
@@ -19,7 +21,7 @@ In each of these modes, the following commands are available:
 
 This mode also provides validation of fields -- valid fields are highlighted
 with `fxrd-current-field-face`, while invalid fields are highlighted with
-`fxrd-invalid-field-face` (both customizable). The current field name is 
+`fxrd-invalid-field-face` (both customizable). The current field name is
 also displayed in the modeline.
 
 ### Examples
