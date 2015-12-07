@@ -41,7 +41,7 @@
           (4 11 "Receiving DFI Identification" ,(fxrd-numeric-v))
           (12 12 "Check Digit" ,(fxrd-numeric-v))
           (13 29 "DFI Account Number" ,(fxrd-alphanumeric-v))
-          (30 39 "Amount" ,(fxrd-numeric-v))
+          (30 39 "Amount" ,(fxrd-numeric-v :min 0))
           (40 54 "Individual Identification Number" ,(fxrd-alphanumeric-v))
           (55 76 "Individual Name" ,(fxrd-alphanumeric-v))
           (77 78 "Discretionary Data" ,(fxrd-alphanumeric-v))
