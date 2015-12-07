@@ -4,7 +4,8 @@
 (require 'eieio-base)
 
 (defclass fxrd-validator (eieio-named)
-  ((pad :initarg :pad
+  (;; Public slots
+   (pad :initarg :pad
         :initform ""
         :type string
         :custom string
@@ -23,36 +24,53 @@
          :initform ()
          :type list
          :custom list
-         :documentation "Possible enum values for this field"))
+         :documentation "Possible enum values for this field")
+   ;; Private slots
+   (const-transform :initform #'identity
+                    :documentation "Transform to be used when validating const fields")
+   (const-eq :initform #'eq
+             :documentation "Equality function for const values")
+   (regex :initform "^.*$"
+          :documentation "Regex to validate field against"))
   "The base validator class for all field validation types")
 (defmethod fxrd-validate (val field)
   "Validate the field with the given validator"
   t)
 
-(defclass fxrd-numeric-v (fxrd-validator)
-  ((pad :initform "0")))
-(defmethod fxrd-validate ((val fxrd-numeric-v) field-value)
-  (let ((const (slot-value val 'const)))
-    (and (string-match (concat "^" (slot-value val 'pad) "*" "[[:digit:]]*$")
-                       field-value)
+(defun fxrd-general-validator (val field-value)
+  (let ((const (slot-value val 'const))
+        (const-transform (slot-value val 'const-transform))
+        (const-eq (slot-value val 'const-eq))
+        (pad (slot-value val 'pad))
+        (regex (slot-value val 'regex)))
+    ;; TODO: alignment goes here
+    (and (string-match (concat "^" pad "*" regex "$") field-value)
          ;; If const is set, we must match it
-         (if const (eq const (string-to-int field-value))
+         (if const (funcall const-eq const (funcall const-transform field-value))
            t))))
 
-(defclass fxrd-decimal-v (fxrd-numeric-v) ()
+
+(defclass fxrd-numeric-v (fxrd-validator)
+  ((pad :initform "0")
+   (const-transform :initform #'string-to-int)
+   (regex :initform "[[:digit:]]*"))
+  "Integer fields")
+(defmethod fxrd-validate ((val fxrd-numeric-v) field-value)
+  (fxrd-general-validator val field-value))
+
+(defclass fxrd-decimal-v (fxrd-numeric-v)
+  ((const-transform :initform #'string-to-number)
+   (regex :initform "[[:digit:]]*\\(\\.[[:digit:]]+\\)"))
   "Numeric fields with a decimal point (floating-point values)")
 (defmethod fxrd-validate ((val fxrd-decimal-v) field-value)
-  (string-match (concat "^" (slot-value val 'pad) "*"
-                        "[[:digit:]]*\\(\\.[[:digit:]]+\\)$")
-                field-value))
+  (fxrd-general-validator val field-value))
 
-(defclass fxrd-alphanumeric-v (fxrd-validator) ()
+(defclass fxrd-alphanumeric-v (fxrd-validator)
+  ((pad :initform " ")
+   (const-eq :initform #'string=)
+   (regex :initform "[[:print:]]*" field-value))
   "Any printable characters")
 (defmethod fxrd-validate ((val fxrd-alphanumeric-v) field-value)
-  (let ((const (slot-value val 'const)))
-    (and (string-match "^[[:print:]]*$" field-value)
-         ;; If const is set, we must match it
-         (if const (string= const field-value)
-           t))))
+  (fxrd-general-validator val field-value))
 
 (provide 'fxrd-validators)
