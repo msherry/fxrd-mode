@@ -97,6 +97,12 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Imports
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'fxrd-validators)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Utility functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -175,8 +181,10 @@ buffer-substring, etc.) handle ranges."
          (validator (get-validator-from-field-spec field-spec))
          (value (current-field-value)))
     (when validator
-        (cond ((functionp validator) (funcall validator value))
-              (t nil)))))
+      (cond ((fxrd-validator-child-p validator)
+             (fxrd-validate validator value))
+            ((functionp validator) (funcall validator value))
+            (t nil)))))
 
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-current-overlay t)
