@@ -25,6 +25,16 @@
          :type list
          :custom list
          :documentation "Possible enum values for this field")
+   (min :initarg :min
+        :initform nil
+        :type (or null integer)
+        :custom (or null integer)
+        :documentation "Minimum value for this field")
+   (max :initarg :max
+        :initform nil
+        :type (or null integer)
+        :custom (or null integer)
+        :documentation "Maximum value for this field")
    ;; Private slots
    (comp-transform :initform #'identity
                    :documentation "Transform to be used when comparing fields")
@@ -51,13 +61,7 @@
 
 
 (defclass fxrd-numeric-v (fxrd-validator)
-  ((min :initarg :min
-        :initform nil
-        :type (or null integer))
-   (max :initarg :max
-        :initform nil
-        :type (or null integer))
-   (pad :initform "0")
+  ((pad :initform "0")
    (comp-transform :initform #'string-to-int)
    (regex :initform "[[:digit:]]*"))
   "Integer fields")

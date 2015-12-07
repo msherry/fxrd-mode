@@ -15,8 +15,7 @@
           (87 201 "Filler" ,(fxrd-alphanumeric-v))))
     ("D" (
           (1 1 "Record Type (D)" ,(fxrd-alphanumeric-v :const "D"))
-          ;; NOTE: Mastercard's spec says numeric, but they allow alphanumerics
-          (2 14 "Transaction Sequence Number" ,(fxrd-alphanumeric-v))
+          (2 14 "Transaction Sequence Number" ,(fxrd-numeric-v))
           (15 33 "Bank Account Number" ,(fxrd-numeric-v :pad " "))
           (34 46 "Transaction Amount" ,(fxrd-decimal-v :pad " "))
           (47 54 "Transaction Date" ,(fxrd-numeric-v))

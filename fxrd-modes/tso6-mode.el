@@ -23,9 +23,8 @@
           (106 106 "Exception Reason Code" ,(fxrd-alphanumeric-v)) ;TODO: enums
           (107 136 "Exception Reason Description" ,(fxrd-alphanumeric-v))
           (137 144 "Rebate File Sent Date" ,(fxrd-numeric-v)) ;TODO: date
-          ;; NOTE: Mastercard's spec says numeric, but they allow alphanumerics
-          (145 157 "Transaction Sequence Number" ,(fxrd-alphanumeric-v))
-          (157 201 "Filler" ,(fxrd-alphanumeric-v))))
+          (145 157 "Transaction Sequence Number" ,(fxrd-numeric-v))
+          (158 201 "Filler" ,(fxrd-alphanumeric-v))))
     ;; Trailer Record
     ("T" (
           (1 1 "Record Type (T)" ,(fxrd-alphanumeric-v :const "T"))
