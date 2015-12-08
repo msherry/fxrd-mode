@@ -25,7 +25,8 @@
           (5 20 "Company Name" ,(fxrd-alphanumeric-v))
           (21 40 "Company Discretionary Data" ,(fxrd-alphanumeric-v))
           (41 50 "Company Identification" ,(fxrd-alphanumeric-v))
-          (51 53 "Standard Entry Class Code" ,(fxrd-alphanumeric-v :enum '("PPD" "CCD" "CTX")))
+          (51 53 "Standard Entry Class Code" ,(fxrd-alphanumeric-v
+                                               :enum '("PPD" "CCD" "CTX")))
           (54 63 "Company Entry Description" ,(fxrd-alphanumeric-v))
           (64 69 "Company Descriptive Date" ,(fxrd-alphanumeric-v))
           (70 75 "Effective Entry Date" ,(fxrd-numeric-v))

@@ -20,7 +20,8 @@
           (51 70 "Bank Product Code" ,(fxrd-alphanumeric-v))
           (71 92 "Transaction Description" ,(fxrd-alphanumeric-v))
           (93 105 "Rebate Amount" ,(fxrd-decimal-v :pad " "))
-          (106 106 "Exception Reason Code" ,(fxrd-alphanumeric-v)) ;TODO: enums
+          (106 106 "Exception Reason Code" ,(fxrd-alphanumeric-v
+                                             :enum '("A" "C" "I" "M" "O" "R")))
           (107 136 "Exception Reason Description" ,(fxrd-alphanumeric-v))
           (137 144 "Rebate File Sent Date" ,(fxrd-numeric-v)) ;TODO: date
           (145 157 "Transaction Sequence Number" ,(fxrd-numeric-v))

@@ -22,7 +22,7 @@
           (55 67 "Rebate Amount" ,(fxrd-decimal-v :pad " "))
           (68 71 "Merchant Category Code" ,(fxrd-alphanumeric-v))
           (72 93 "Transaction Description" ,(fxrd-alphanumeric-v))
-          (94 94 "Reversal Indicator" ,(fxrd-alphanumeric-v))
+          (94 94 "Reversal Indicator" ,(fxrd-alphanumeric-v :enum '("Y" "N")))
           (95 116 "Merchant ID" ,(fxrd-alphanumeric-v))
           (117 122 "Issuer ICA Code" ,(fxrd-numeric-v))
           (123 124 "Program Code" ,(fxrd-alphanumeric-v))

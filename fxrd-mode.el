@@ -188,8 +188,7 @@ buffer-substring, etc.) handle ranges."
 
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-current-overlay t)
-  (remove-overlays nil nil 'fxrd-invalid-overlay t)
-  )
+  (remove-overlays nil nil 'fxrd-invalid-overlay t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
