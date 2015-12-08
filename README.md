@@ -1,5 +1,5 @@
 # fxrd-mode
-Emacs major mode for working with fixed-field-width files (NACHA, TSO6, RM39,
+Emacs major modes for working with fixed-field-width files (NACHA, TSO6, RM39,
 etc.)
 
 Copyright (C) 2015 Marc Sherry
@@ -37,7 +37,7 @@ All invalid fields highlighted:
 
 ## Installation
 
-Put this file where Emacs can find it (on your `load-path` somewhere), and
+Put this package where Emacs can find it (on your `load-path` somewhere), and
 add the following to your .emacs/init.el file:
 
 ```lisp
