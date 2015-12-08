@@ -21,11 +21,11 @@
     ;; Batch Header Record
     ("5" (
           (1 1 "Record Type (5)" ,(fxrd-numeric-v :const 5))
-          (2 4 "Service Class Code" ,(fxrd-numeric-v))   ;TODO: enums
+          (2 4 "Service Class Code" ,(fxrd-numeric-v :enum '(200 220 225)))
           (5 20 "Company Name" ,(fxrd-alphanumeric-v))
           (21 40 "Company Discretionary Data" ,(fxrd-alphanumeric-v))
           (41 50 "Company Identification" ,(fxrd-alphanumeric-v))
-          (51 53 "Standard Entry Class Code" ,(fxrd-alphanumeric-v)) ;TODO: enums
+          (51 53 "Standard Entry Class Code" ,(fxrd-alphanumeric-v :enum '("PPD" "CCD" "CTX")))
           (54 63 "Company Entry Description" ,(fxrd-alphanumeric-v))
           (64 69 "Company Descriptive Date" ,(fxrd-alphanumeric-v))
           (70 75 "Effective Entry Date" ,(fxrd-numeric-v))
@@ -37,7 +37,7 @@
     ("6" (
           (1 1 "Record Type (6)" ,(fxrd-numeric-v :const 6))
           ;; TODO: transaction code parsing/descriptions
-          (2 3 "Transaction Code" ,(fxrd-numeric-v)) ;TODO: enums
+          (2 3 "Transaction Code" ,(fxrd-numeric-v :enum '(22 23 27 28 32 33 37 38)))
           (4 11 "Receiving DFI Identification" ,(fxrd-numeric-v))
           (12 12 "Check Digit" ,(fxrd-numeric-v))
           (13 29 "DFI Account Number" ,(fxrd-alphanumeric-v))
@@ -45,7 +45,7 @@
           (40 54 "Individual Identification Number" ,(fxrd-alphanumeric-v))
           (55 76 "Individual Name" ,(fxrd-alphanumeric-v))
           (77 78 "Discretionary Data" ,(fxrd-alphanumeric-v))
-          (79 79 "Addenda Record Indicator" ,(fxrd-numeric-v))
+          (79 79 "Addenda Record Indicator" ,(fxrd-numeric-v :enum '(0 1)))
           (80 94 "Trace Number" ,(fxrd-numeric-v))))
     ;; CCD Addenda Record
     ("7" (

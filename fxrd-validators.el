@@ -21,7 +21,7 @@
           :custom (or null integer string)
           :documentation "A constant value for this field")
    (enum :initarg :enum
-         :initform ()
+         :initform nil
          :type list
          :custom list
          :documentation "Possible enum values for this field")
@@ -49,13 +49,15 @@
 
 (defun fxrd-general-validator (val field-value)
   (let ((const (slot-value val 'const))
+        (enum (slot-value val 'enum))
         (comp-transform (slot-value val 'comp-transform))
         (const-eq (slot-value val 'const-eq))
         (pad (slot-value val 'pad))
         (regex (slot-value val 'regex)))
     ;; TODO: alignment goes here
     (and (string-match (concat "^" pad "*" regex "$") field-value)
-         ;; If const is set, we must match it
+         (if enum (member (funcall comp-transform field-value) enum)
+           t)
          (if const (funcall const-eq const (funcall comp-transform field-value))
            t))))
 
