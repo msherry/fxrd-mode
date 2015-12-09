@@ -86,8 +86,6 @@
 
 \\{fxrd-mode-map}"
 (setq fxrd-current-spec nacha-spec))
-
-(autoload 'nacha-mode "fxrd-mode" "NACHA mode" t)
-(add-to-list 'auto-mode-alist '("\\.nacha\\($\\|\\.\\)" . nacha-mode))
+;;;###autoload(add-to-list 'auto-mode-alist '("\\.nacha\\($\\|\\.\\)" . nacha-mode))
 
 (provide 'nacha-mode)

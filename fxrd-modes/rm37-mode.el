@@ -41,9 +41,7 @@
 
 \\{fxrd-mode-map}"
   (setq fxrd-current-spec rm37-spec))
-
-(autoload 'rm37-mode "fxrd-mode" "RM37 mode" t)
-(add-to-list 'auto-mode-alist '("\\.rm37\\($\\|\\.\\)" . rm37-mode))
-(add-to-list 'auto-mode-alist '("\\.rm39\\($\\|\\.\\)" . rm37-mode))
+;;;###autoload(add-to-list 'auto-mode-alist '("\\.rm37\\($\\|\\.\\)" . rm37-mode))
+;;;###autoload(add-to-list 'auto-mode-alist '("\\.rm39\\($\\|\\.\\)" . rm37-mode))
 
 (provide 'rm37-mode)
