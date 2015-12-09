@@ -1,5 +1,5 @@
 # fxrd-mode
-Emacs major modes for working with fixed-field-width files (NACHA, TSO6, RM39,
+Emacs major modes for working with fixed-field-width files (NACHA, TSO6, RM37,
 etc.)
 
 Copyright (C) 2015 Marc Sherry

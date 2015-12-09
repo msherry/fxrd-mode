@@ -292,18 +292,22 @@ Called by `fxrd-field-name-idle-timer'."
                                           'help-echo fxrd-mode-line-help-echo)))
         (force-mode-line-update))
       ;; Highlight current field
-      (when (and field-boundaries
-                 (not (string= fxrd-field-value-old
-                               field-value)))
-        (setq fxrd-field-value-old field-value)
-        (remove-overlays nil nil 'fxrd-current-overlay t)
-        (let* ((begin (nth 0 field-boundaries))
-               (end (nth 1 field-boundaries))
-               (overlay (make-overlay begin end)))
-          (overlay-put overlay 'fxrd-current-overlay t)
-          (overlay-put overlay 'face
-                       (cond ((current-field-valid-p) fxrd-current-field-face)
-                             (t fxrd-invalid-field-face))))))
+      (if field-boundaries
+          (when (not (string= fxrd-field-value-old
+                              field-value))
+            (setq fxrd-field-value-old field-value)
+            (remove-overlays nil nil 'fxrd-current-overlay t)
+            (let* ((begin (nth 0 field-boundaries))
+                   (end (nth 1 field-boundaries))
+                   (overlay (make-overlay begin end)))
+              (overlay-put overlay 'fxrd-current-overlay t)
+              (overlay-put overlay 'face
+                           (cond ((current-field-valid-p) fxrd-current-field-face)
+                                 (t fxrd-invalid-field-face)))))
+        ;; Not in a field, clear the overlay
+        (progn
+          (setq fxrd-field-value-old nil)
+          (remove-overlays nil nil 'fxrd-current-overlay t))))
     (fxrd-highlight-invalid-fields)))
 
 (defun fxrd-highlight-invalid-fields ()
