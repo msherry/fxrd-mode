@@ -4,6 +4,7 @@
 
 ;; Author: Marc Sherry (msherry@gmail.com)
 ;; URL: https://github.com/msherry/fxrd-mode
+;; Keywords: convenience
 
 
 ;;; Commentary:
@@ -29,6 +30,8 @@
 ;;; Installation:
 
 ;; Installation via MELPA is easiest.
+
+;;; Code:
 
 (defgroup fxrd nil
   "Major mode for editing fixed field width files"
