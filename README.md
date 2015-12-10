@@ -37,9 +37,4 @@ All invalid fields highlighted:
 
 ## Installation
 
-Put this package where Emacs can find it (on your `load-path` somewhere), and
-add the following to your .emacs/init.el file:
-
-```lisp
-(require 'fxrd-autoloads)
-```
+Installation via MELPA is easiest.

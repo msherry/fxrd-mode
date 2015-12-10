@@ -23,16 +23,12 @@
 
 ;; This mode also provides validation of fields -- valid fields are highlighted
 ;; with `fxrd-current-field-face', while invalid fields are highlighted with
-;; `fxrd-invalid-field-face' (both customizable)
+;; `fxrd-invalid-field-face' (both customizable). The current field name is
+;; also displayed in the modeline.
 
-;; Installation:
+;;; Installation:
 
-;; Put this file where Emacs can find it (on your `load-path' somewhere, and
-;; add the following to your .emacs/init.el file:
-
-;;; Code:
-
-;; (require 'fxrd-autoloads)
+;; Installation via MELPA is easiest.
 
 (defgroup fxrd nil
   "Major mode for editing fixed field width files"
