@@ -22,7 +22,14 @@
           (93 105 "Rebate Amount" ,(fxrd-decimal-v :pad " "))
           (106 106 "Exception Reason Code" ,(fxrd-alphanumeric-v
                                              :enum '("A" "C" "I" "M" "O" "R")))
-          (107 136 "Exception Reason Description" ,(fxrd-alphanumeric-v))
+          ;; TODO: account for padding in enum
+          (107 136 "Exception Reason Description" ,(fxrd-alphanumeric-v
+                                                    :enum '("Account Not Found"
+                                                            "Customer Not Found"
+                                                            "Invalid Account"
+                                                            "Multiple Accounts Found"
+                                                            "Others"
+                                                            "Invalid Account Country")))
           (137 144 "Rebate File Sent Date" ,(fxrd-numeric-v)) ;TODO: date
           (145 157 "Transaction Sequence Number" ,(fxrd-numeric-v))
           (158 201 "Filler" ,(fxrd-alphanumeric-v))))

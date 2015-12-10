@@ -15,16 +15,16 @@ as in ACH transactions. This package provides:
 - `rm37-mode`: a mode for editing RM37 (Mastercard rebate transaction) files
 - `tso6-mode`: a mode for editing TSO6 (Mastercard rebate confirmation) files
 
+In each mode, the current field is highlighted with `fxrd-current-field-face`,
+and the field's name is shown in the modeline. All fields with errors are
+highlighted with `fxrd-invalid-field-face`, and if the current field has an
+error, the error is also displayed in the modeline.
+
 ## Usage
 In each of these modes, the following commands are available:
 
 - `M-<right>` `(next-field)` and `M-<left>` `(previous-field)` move to the next
  and previous fields, respectively.
-
-This mode also provides validation of fields -- valid fields are highlighted
-with `fxrd-current-field-face`, while invalid fields are highlighted with
-`fxrd-invalid-field-face` (both customizable). The current field name is
-also displayed in the modeline.
 
 ### Examples
 
@@ -32,10 +32,10 @@ Current field highlighted:
 ![Current field highlighted](http://i.imgur.com/NTZb6Fl.png)
 
 Current field invalid:
-![Current field invalid](http://i.imgur.com/EStvzML.png)
+![Current field invalid](http://i.imgur.com/KmfxpU0.png)
 
 All invalid fields highlighted:
-![ALl invalid fields highlighted](http://i.imgur.com/ig9BnNZ.png)
+![ALl invalid fields highlighted](http://i.imgur.com/KkcviBF.png)
 
 ## Installation
 

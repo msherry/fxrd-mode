@@ -47,19 +47,29 @@
   "Validate the field with the given validator"
   (fxrd-general-validator val field))
 
+(define-error 'validation-error "Validation error")
+
 (defun fxrd-general-validator (val field-value)
-  (let ((const (slot-value val 'const))
-        (enum (slot-value val 'enum))
-        (comp-transform (slot-value val 'comp-transform))
-        (const-eq (slot-value val 'const-eq))
-        (pad (slot-value val 'pad))
-        (regex (slot-value val 'regex)))
-    ;; TODO: alignment goes here
-    (and (string-match (concat "^" pad "*" regex "$") field-value)
-         (if enum (member (funcall comp-transform field-value) enum)
-           t)
-         (if const (funcall const-eq const (funcall comp-transform field-value))
-           t))))
+  (let* ((comp-transform (slot-value val 'comp-transform))
+         (val-for-comparison (funcall comp-transform field-value))
+         (const (slot-value val 'const))
+         (enum (slot-value val 'enum))
+         (const-eq (slot-value val 'const-eq))
+         (align (slot-value val 'align))
+         (pad (slot-value val 'pad))
+         (regex (slot-value val 'regex))
+         (regex-w-pad (cond ((string= align "RIGHT") (concat "^" pad "*" regex "$"))
+                            (t (concat "^" regex pad "*$" )))))
+    (unless (string-match regex-w-pad field-value)
+      (signal 'validation-error (format "Failed to match regex %s" regex-w-pad)))
+    (when enum
+      (unless (member val-for-comparison enum)
+        (signal 'validation-error (format "%s not one of enum values %s" val-for-comparison enum))))
+    (when const
+      (unless (funcall const-eq const val-for-comparison)
+        (signal 'validation-error (format "%s not equal to const %s" const val-for-comparison))))
+    ;; All done
+    t))
 
 
 (defclass fxrd-numeric-v (fxrd-validator)
@@ -72,10 +82,12 @@
         (min (slot-value val 'min))
         (max (slot-value val 'max)))
     (and (fxrd-general-validator val field-value)
-         (cond ((and min max) (<= min value max))
-               (min (<= min value))
-               (max (<= value max))
-               (t t)))))
+         (or (cond ((and min max) (<= min value max))
+                (min (<= min value))
+                (max (<= value max))
+                (t t))
+             (signal 'validation-error (format "Value %s is outside of range %s - %s"
+                                               value min max))))))
 
 (defclass fxrd-decimal-v (fxrd-numeric-v)
   ((comp-transform :initform #'string-to-number)
@@ -84,6 +96,7 @@
 
 (defclass fxrd-alphanumeric-v (fxrd-validator)
   ((pad :initform " ")
+   (align :initform "LEFT")
    (const-eq :initform #'string=)
    (regex :initform "[[:print:]]*" field-value))
   "Any printable characters")
