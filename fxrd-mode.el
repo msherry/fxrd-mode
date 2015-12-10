@@ -34,7 +34,7 @@
 
 ;; (require 'fxrd-autoloads)
 
-(defgroup FXRD nil
+(defgroup fxrd nil
   "Major mode for editing fixed field width files"
   :group 'convenience)
 

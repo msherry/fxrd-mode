@@ -12,7 +12,7 @@
           (16 26 "Member ICA" ,(fxrd-numeric-v))
           ;; Undocumented, but supported by Mastercard
           (27 86 "File Name" ,(fxrd-alphanumeric-v))
-          (87 201 "Filler" ,(fxrd-alphanumeric-v))))
+          (87 200 "Filler" ,(fxrd-alphanumeric-v))))
     ("D" (
           (1 1 "Record Type (D)" ,(fxrd-alphanumeric-v :const "D"))
           (2 14 "Transaction Sequence Number" ,(fxrd-numeric-v))
