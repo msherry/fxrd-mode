@@ -16,6 +16,7 @@
 ;; - `nacha-mode': a mode for editing NACHA (ACH transaction) files
 ;; - `rm37-mode': a mode for editing RM37 (Mastercard rebate transaction) files
 ;; - `tso6-mode': a mode for editing TSO6 (Mastercard rebate confirmation) files
+;; - `cbnot-mode': a mode for editing CBNOT (Amex chargeback notification) files
 
 ;; In each mode, the current field is highlighted with
 ;; `fxrd-current-field-face', and the field's name is shown in the
@@ -366,10 +367,11 @@ Called by `fxrd-field-name-idle-timer'."
                   (overlay-put overlay 'face
                                (cond ((not validation-error) fxrd-current-field-face)
                                      (t fxrd-invalid-field-face)))))))
-        ;; Not in a field, clear the overlay
+        ;; Not in a field, clear the overlay and modeline
         (progn
           (setq fxrd-field-value-old nil
                 fxrd-field-boundaries-old nil)
+          (fxrd-maybe-set-modeline nil)
           (remove-overlays nil nil 'fxrd-current-overlay t))))
     (fxrd-highlight-invalid-fields)))
 

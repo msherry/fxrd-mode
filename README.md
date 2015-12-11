@@ -14,6 +14,7 @@ as in ACH transactions. This package provides:
 - `nacha-mode`: a mode for editing NACHA (ACH transaction) files
 - `rm37-mode`: a mode for editing RM37 (Mastercard rebate transaction) files
 - `tso6-mode`: a mode for editing TSO6 (Mastercard rebate confirmation) files
+- `cbnot-mode`: a mode for editing CBNOT (Amex chargeback notification) files
 
 In each mode, the current field is highlighted with `fxrd-current-field-face`,
 and the field's name is shown in the modeline. All fields with errors are

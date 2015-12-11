@@ -35,6 +35,11 @@
         :type (or null integer)
         :custom (or null integer)
         :documentation "Maximum value for this field")
+   (reserved :initarg :reserved
+             :initform nil
+             :type boolean
+             :custom boolean
+             :documentation "Indicates that the field is reserved")
    ;; Private slots
    (comp-transform :initform #'identity
                    :documentation "Transform to be used when comparing fields")
@@ -73,6 +78,7 @@ specialized if necessary."
       (signal 'validation-error (format "Failed to match regex %s" regex-w-pad)))
     (when enum
       (unless (member val-for-comparison enum)
+        ;; TODO: account for padding in enum comparison
         (signal 'validation-error (format "%s not one of enum values %s" val-for-comparison enum))))
     (when const
       (unless (funcall const-eq const val-for-comparison)
@@ -102,7 +108,7 @@ specialized if necessary."
 
 (defclass fxrd-decimal-v (fxrd-numeric-v)
   ((comp-transform :initform #'string-to-number)
-   (regex :initform "[[:digit:]]*\\(\\.[[:digit:]]+\\)"))
+   (regex :initform "-?[[:digit:]]*\\(\\.[[:digit:]]+\\)"))
   "Numeric fields with a decimal point (floating-point values)")
 
 (defclass fxrd-alphanumeric-v (fxrd-validator)
