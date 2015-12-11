@@ -109,6 +109,12 @@
 ;;; Utility functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; save-mark-and-excursion in Emacs 25 works like save-excursion did before
+(eval-when-compile
+  (when (not (fboundp 'save-mark-and-excursion))
+    (defmacro save-mark-and-excursion (&rest body)
+      `(save-excursion ,@body))))
+
 (defun current-line-pos ()
   "Yields the current position within the line"
   ;; TODO: find a better way to find position within a line
