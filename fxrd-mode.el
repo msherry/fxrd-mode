@@ -303,6 +303,7 @@ buffer-substring, etc.) handle ranges."
 (make-variable-buffer-local 'fxrd-point-old)
 
 (define-minor-mode fxrd-field-name-mode
+  ;; TODO: this probably shouldn't be a minor mode
   "Toggle FXRD-field-name mode.
 When enabled, the name of the current field appears in the mode line."
   :group 'fxrd
@@ -317,7 +318,8 @@ When enabled, the name of the current field appears in the mode line."
   (if fxrd-field-name-mode
       (if (memq t (mapcar (lambda (buffer)
                             (with-current-buffer buffer
-                              (when (derived-mode-p'fxrd-mode)
+                              (when (derived-mode-p 'fxrd-mode)
+                                ;; TODO: should we be setting these in the map fn?
                                 (setq fxrd-field-name-string nil
                                       fxrd-field-name-string-old nil)
                                 t)))
