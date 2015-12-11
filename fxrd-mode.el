@@ -180,25 +180,28 @@ buffer-substring, etc.) handle ranges."
 
 (defun fxrd-current-field-valid-p ()
   "Returns t if the current field is valid, or nil otherwise."
-  (if (fxrd-current-field-error) nil
-    t))
+  (unless (fxrd-current-field-error) t))
 
 (defun fxrd-current-field-error ()
   "Returns an error string if the current field is invalid, or nil otherwise."
   (let* ((field-spec (get-current-field-spec))
          (validator (get-validator-from-field-spec field-spec))
          (value (fxrd-current-field-value)))
-    (if validator
+    ;; If no validator defined, field is valid by default.
+    (when validator
       (condition-case err
-          (cond ((fxrd-validator-child-p validator)
-                 ;; Negate t-returning validator to indicate success
-                 (not (fxrd-validate validator value)))
-                ((functionp validator)
-                 (not (funcall validator value)))
-                (t (signal 'validator-error "Unknown validator type for field")))
-        (validation-error (cdr err)))
-      ;; No validator provided, field is valid by default
-      nil)))
+          ;; Negate t-returning validators to indicate no error.
+          (not
+           (cond ((fxrd-validator-child-p validator)
+                  ;; fxrd-validator object
+                  (fxrd-validate validator value))
+                 ((functionp validator)
+                  ;; generic function validator
+                  (funcall validator value))
+                 (t
+                  ;; unknown validator type
+                  (signal 'validator-error "Unknown validator type for field"))))
+        (validation-error (cdr err))))))
 
 (defun fxrd-point-in-field-boundaries-p (field-boundaries)
   "Returns t if the point is inside the given field-boundaries, nil otherwise."
