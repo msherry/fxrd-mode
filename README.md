@@ -23,8 +23,8 @@ error, the error is also displayed in the modeline.
 ## Usage
 In each of these modes, the following commands are available:
 
-- `M-<right>` (`next-field`) and `M-<left>` (`previous-field`) move to the next
- and previous fields, respectively.
+- `M-<right>` (`fxrd-next-field`) and `M-<left>` (`fxrd-previous-field`) move
+  to the next and previous fields, respectively.
 - `C-.` (`fxrd-next-error`) moves to the next invalid field.
 
 ### Examples
