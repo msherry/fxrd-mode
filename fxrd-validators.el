@@ -57,6 +57,8 @@ appropriate message in the DATA field on errors.
 
 This is the base validator for all fields. It may be further
 specialized if necessary."
+  (unless field-value
+    (signal 'validation-error (format "nil value for field")))
   (let* ((comp-transform (slot-value val 'comp-transform))
          (val-for-comparison (funcall comp-transform field-value))
          (const (slot-value val 'const))
@@ -85,6 +87,8 @@ specialized if necessary."
    (regex :initform "[[:digit:]]*"))
   "Integer fields")
 (defmethod fxrd-validate ((val fxrd-numeric-v) field-value)
+  (unless field-value
+    (signal 'validation-error (format "nil value for numeric field")))
   (let ((value (funcall (slot-value val 'comp-transform) field-value))
         (min (slot-value val 'min))
         (max (slot-value val 'max)))

@@ -172,11 +172,14 @@ buffer-substring, etc.) handle ranges."
 
 (defun fxrd-current-field-value ()
   "Find the contents of the current field"
-  (let* ((field-boundaries (current-field-boundaries))
-         (start (nth 0 field-boundaries))
-         (end (nth 1 field-boundaries)))
-    (when (and start end)
-      (buffer-substring start end))))
+  (let ((field-boundaries (current-field-boundaries)))
+    (when field-boundaries
+      (let ((start (nth 0 field-boundaries))
+            (end (nth 1 field-boundaries)))
+        (when (and start end
+                   (<= start (point-max))
+                   (<= end (point-max)))
+          (buffer-substring start end))))))
 
 (defun fxrd-current-field-valid-p ()
   "Returns t if the current field is valid, or nil otherwise."
@@ -339,33 +342,34 @@ When enabled, the name of the current field appears in the mode line."
   "Construct `fxrd-field-name-string' to display in mode line.
 Called by `fxrd-field-name-idle-timer'."
   (when (derived-mode-p 'fxrd-mode)
-    (let ((field-name (current-field-name))
-          (field-boundaries (current-field-boundaries))
-          (field-value (fxrd-current-field-value)))
-      (fxrd-maybe-set-modeline field-name)
-      ;; Highlight current field, update modeline with error text if necessary
+    (let ((field-boundaries (current-field-boundaries)))
       (if field-boundaries
-          (let ((validation-error (fxrd-current-field-error)))
-            (when validation-error
-              ;; If not t, it's a validation error message
-              (fxrd-maybe-set-modeline (format "%s:%s" field-name validation-error)))
-            (when (not (and (string= fxrd-field-value-old
-                                     field-value)
-                            (equal fxrd-field-boundaries-old
-                                   field-boundaries)))
-              (setq fxrd-field-value-old field-value
-                    fxrd-field-boundaries-old field-boundaries)
-              (remove-overlays nil nil 'fxrd-current-overlay t)
-              (let* ((begin (nth 0 field-boundaries))
-                     (end (nth 1 field-boundaries))
-                     (overlay (make-overlay begin end)))
-                (overlay-put overlay 'fxrd-current-overlay t)
-                (overlay-put overlay 'face
-                             (cond ((not validation-error) fxrd-current-field-face)
-                                   (t fxrd-invalid-field-face))))))
+          (let ((field-name (current-field-name))
+                (field-value (fxrd-current-field-value)))
+            (fxrd-maybe-set-modeline field-name)
+            ;; Highlight current field, update modeline with error text if necessary
+            (let ((validation-error (fxrd-current-field-error)))
+              (when validation-error
+                ;; If not t, it's a validation error message
+                (fxrd-maybe-set-modeline (format "%s:%s" field-name validation-error)))
+              (when (not (and (string= fxrd-field-value-old
+                                       field-value)
+                              (equal fxrd-field-boundaries-old
+                                     field-boundaries)))
+                (setq fxrd-field-value-old field-value
+                      fxrd-field-boundaries-old field-boundaries)
+                (remove-overlays nil nil 'fxrd-current-overlay t)
+                (let* ((begin (nth 0 field-boundaries))
+                       (end (nth 1 field-boundaries))
+                       (overlay (make-overlay begin end)))
+                  (overlay-put overlay 'fxrd-current-overlay t)
+                  (overlay-put overlay 'face
+                               (cond ((not validation-error) fxrd-current-field-face)
+                                     (t fxrd-invalid-field-face)))))))
         ;; Not in a field, clear the overlay
         (progn
-          (setq fxrd-field-value-old nil)
+          (setq fxrd-field-value-old nil
+                fxrd-field-boundaries-old nil)
           (remove-overlays nil nil 'fxrd-current-overlay t))))
     (fxrd-highlight-invalid-fields)))
 
