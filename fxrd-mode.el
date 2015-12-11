@@ -200,6 +200,13 @@ buffer-substring, etc.) handle ranges."
       ;; No validator provided, field is valid by default
       nil)))
 
+(defun fxrd-point-in-field-boundaries-p (field-boundaries)
+  "Returns t if the point is inside the given field-boundaries, nil otherwise."
+  (let ((begin (nth 0 field-boundaries))
+        (end (nth 1 field-boundaries)))
+    ;; Remember to account for `end' being off by one
+    (<= begin cur-pos (1- end))))
+
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-current-overlay t)
   (remove-overlays nil nil 'fxrd-invalid-overlay t))
@@ -371,16 +378,16 @@ Called by `fxrd-field-name-idle-timer'."
                (last-pos (point)))
            (while (not done)
              (let ((field-boundaries (current-field-boundaries)))
-               (when field-boundaries
-                 (let ((begin (nth 0 field-boundaries))
-                       (end (nth 1 field-boundaries)))
-                   ;; Skip current field, it will be handled
-                   ;; elsewhere. Remember to account for `end' being off by one
-                   (when (and (not (<= begin cur-pos (1- end))))
-                     (when (not (fxrd-current-field-valid-p))
-                       (let ((overlay (make-overlay begin end)))
-                         (overlay-put overlay 'fxrd-invalid-overlay t)
-                         (overlay-put overlay 'face fxrd-invalid-field-face)))))))
+               (when (and field-boundaries
+                          ;; Skip current field, it will be handled elsewhere
+                          (not (fxrd-point-in-field-boundaries-p field-boundaries))
+                          ;; Field not valid
+                          (not (fxrd-current-field-valid-p)))
+                 (let* ((begin (nth 0 field-boundaries))
+                        (end (nth 1 field-boundaries))
+                        (overlay (make-overlay begin end)))
+                   (overlay-put overlay 'fxrd-invalid-overlay t)
+                   (overlay-put overlay 'face fxrd-invalid-field-face))))
              (fxrd-next-field)
              (if (eq (point) last-pos)
                  (setq done t))
