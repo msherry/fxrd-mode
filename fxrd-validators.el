@@ -50,6 +50,13 @@
 (define-error 'validation-error "Validation error")
 
 (defun fxrd-general-validator (val field-value)
+  "Performs general validations on a field value.
+
+Returns t on success, signals `validation-error' with an
+appropriate message in the DATA field on errors.
+
+This is the base validator for all fields. It may be further
+specialized if necessary."
   (let* ((comp-transform (slot-value val 'comp-transform))
          (val-for-comparison (funcall comp-transform field-value))
          (const (slot-value val 'const))

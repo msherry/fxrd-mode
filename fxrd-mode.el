@@ -25,8 +25,9 @@
 
 ;; In each of these modes, the following commands are available:
 
-;; - M-<right> (`next-field') and M-<left> (`previous-field') move to the next
-;;   and previous fields, respectively.
+;; - M-<right> (`fxrd-next-field') and M-<left> (`fxrd-previous-field') move to
+;;   the next and previous fields, respectively.
+;; - C-. (`fxrd-next-error') moves to the next invalid field.
 
 ;;; Installation:
 
@@ -42,14 +43,14 @@
   '((t (:inherit highlight
         :background "pink")))
   "Highlight the current field."
-  :group 'FXRD)
+  :group 'fxrd)
 (defvar fxrd-current-field-face 'fxrd-current-field-face)
 
 (defface fxrd-invalid-field-face
   '((t (:inherit highlight
         :background "red")))
   "Face for fields failing validation."
-  :group 'FXRD)
+  :group 'fxrd)
 (defvar fxrd-invalid-field-face 'fxrd-invalid-field-face)
 
 (defconst fxrd-mode-line-help-echo
@@ -74,8 +75,9 @@
 
 (defvar fxrd-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-<right>") 'next-field)
-    (define-key map (kbd "M-<left>") 'previous-field)
+    (define-key map (kbd "M-<right>") 'fxrd-next-field)
+    (define-key map (kbd "M-<left>") 'fxrd-previous-field)
+    (define-key map (kbd "C-.") 'fxrd-next-error)
     map)
   "Keymap for FXRD major mode")
 
@@ -168,7 +170,7 @@ buffer-substring, etc.) handle ranges."
              (end (+ line-start (nth 1 field-spec))))
         (list start end)))))
 
-(defun current-field-value ()
+(defun fxrd-current-field-value ()
   "Find the contents of the current field"
   (let* ((field-boundaries (current-field-boundaries))
          (start (nth 0 field-boundaries))
@@ -176,17 +178,27 @@ buffer-substring, etc.) handle ranges."
     (when (and start end)
       (buffer-substring start end))))
 
-(defun current-field-valid-p ()
+(defun fxrd-current-field-valid-p ()
+  "Returns t if the current field is valid, or nil otherwise."
+  (if (fxrd-current-field-error) nil
+    t))
+
+(defun fxrd-current-field-error ()
+  "Returns an error string if the current field is invalid, or nil otherwise."
   (let* ((field-spec (get-current-field-spec))
          (validator (get-validator-from-field-spec field-spec))
-         (value (current-field-value)))
-    (when validator
+         (value (fxrd-current-field-value)))
+    (if validator
       (condition-case err
           (cond ((fxrd-validator-child-p validator)
-                 (fxrd-validate validator value))
-                ((functionp validator) (funcall validator value))
-                (t "No validator found for field"))
-        (validation-error (cdr err))))))
+                 ;; Negate t-returning validator to indicate success
+                 (not (fxrd-validate validator value)))
+                ((functionp validator)
+                 (not (funcall validator value)))
+                (t (signal 'validator-error "Unknown validator type for field")))
+        (validation-error (cdr err)))
+      ;; No validator provided, field is valid by default
+      nil)))
 
 (defun fxrd-clear-overlays ()
   (remove-overlays nil nil 'fxrd-current-overlay t)
@@ -196,7 +208,7 @@ buffer-substring, etc.) handle ranges."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Public functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun next-field ()
+(defun fxrd-next-field ()
   "Move to the start of the next field."
   (interactive)
   (let ((field-boundaries (or (current-field-boundaries)
@@ -205,7 +217,7 @@ buffer-substring, etc.) handle ranges."
       (let ((next-field-start (nth 1 field-boundaries)))
         (goto-char (min next-field-start (point-max)))))))
 
-(defun previous-field ()
+(defun fxrd-previous-field ()
   "Move to the start of the previous field."
   (interactive)
   (let ((field-boundaries (current-field-boundaries)))
@@ -217,6 +229,25 @@ buffer-substring, etc.) handle ranges."
             (let ((begin (nth 0 prev-field-boundaries)))
               (goto-char begin))))))))
 
+(defun fxrd-next-error ()
+  "Move to the next invalid field."
+  (interactive)
+  ;; Stay here if we're already in an invalid field
+  (if (and (current-field-boundaries)
+           (fxrd-current-field-valid-p))
+      (let ((found-error nil)
+            (start-of-error nil))
+        (save-excursion
+          (while (and (not found-error)
+                      (not (equal (point) (point-max))))
+            (fxrd-next-field)
+            (when (and (current-field-boundaries)
+                       (not (fxrd-current-field-valid-p)))
+              (setq found-error t
+                    start-of-error (nth 0 (current-field-boundaries))))))
+        (when found-error
+          (goto-char start-of-error)))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Field name mode
@@ -224,7 +255,7 @@ buffer-substring, etc.) handle ranges."
 
 (defcustom fxrd-field-name-delay 0.125
   "Time in seconds to delay before updating field name display."
-  :group 'FXRD
+  :group 'fxrd
   :type '(number :tag "seconds"))
 
 (defvar fxrd-field-name-idle-timer nil)
@@ -248,7 +279,7 @@ buffer-substring, etc.) handle ranges."
 (define-minor-mode fxrd-field-name-mode
   "Toggle FXRD-field-name mode.
 When enabled, the name of the current field appears in the mode line."
-  :group 'FXRD
+  :group 'fxrd
   :global t
   :init-value t
   ;; First, always disable current timer to avoid having two timers.
@@ -294,14 +325,14 @@ Called by `fxrd-field-name-idle-timer'."
   (when (derived-mode-p 'fxrd-mode)
     (let ((field-name (current-field-name))
           (field-boundaries (current-field-boundaries))
-          (field-value (current-field-value)))
+          (field-value (fxrd-current-field-value)))
       (fxrd-maybe-set-modeline field-name)
       ;; Highlight current field, update modeline with error text if necessary
       (if field-boundaries
-          (let ((validation-result (current-field-valid-p)))
-            (when (not (eq t validation-result))
+          (let ((validation-error (fxrd-current-field-error)))
+            (when validation-error
               ;; If not t, it's a validation error message
-              (fxrd-maybe-set-modeline (format "%s:%s" field-name validation-result)))
+              (fxrd-maybe-set-modeline (format "%s:%s" field-name validation-error)))
             (when (not (string= fxrd-field-value-old
                                 field-value))
               (setq fxrd-field-value-old field-value)
@@ -311,7 +342,7 @@ Called by `fxrd-field-name-idle-timer'."
                      (overlay (make-overlay begin end)))
                 (overlay-put overlay 'fxrd-current-overlay t)
                 (overlay-put overlay 'face
-                             (cond ((eq t validation-result) fxrd-current-field-face)
+                             (cond ((not validation-error) fxrd-current-field-face)
                                    (t fxrd-invalid-field-face))))))
         ;; Not in a field, clear the overlay
         (progn
@@ -337,12 +368,11 @@ Called by `fxrd-field-name-idle-timer'."
                    ;; Skip current field, it will be handled
                    ;; elsewhere. Remember to account for `end' being off by one
                    (when (and (not (<= begin cur-pos (1- end))))
-                     (let ((validation-result (current-field-valid-p)))
-                       (when (not (eq t validation-result))
-                         (let ((overlay (make-overlay begin end)))
-                           (overlay-put overlay 'fxrd-invalid-overlay t)
-                           (overlay-put overlay 'face fxrd-invalid-field-face))))))))
-             (next-field)
+                     (when (not (fxrd-current-field-valid-p))
+                       (let ((overlay (make-overlay begin end)))
+                         (overlay-put overlay 'fxrd-invalid-overlay t)
+                         (overlay-put overlay 'face fxrd-invalid-field-face)))))))
+             (fxrd-next-field)
              (if (eq (point) last-pos)
                  (setq done t))
              (setq last-pos (point))))))))
