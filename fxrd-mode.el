@@ -263,13 +263,19 @@ buffer-substring, etc.) handle ranges."
 (defvar fxrd-field-name-string nil)
 (make-variable-buffer-local 'fxrd-field-name-string)
 
-(defvar fxrd-field-name-string-old nil)
+(defvar fxrd-field-name-string-old
+  "The last highlighted field's name" nil)
 (make-variable-buffer-local 'fxrd-field-name-string-old)
 
 (defvar fxrd-field-value-old
   "The last computed value of the current field"
   nil)
 (make-variable-buffer-local 'fxrd-field-value-old)
+
+(defvar fxrd-field-boundaries-old
+  "The last computed boundaries of the current field"
+  nil)
+(make-variable-buffer-local 'fxrd-field-boundaries-old)
 
 (defvar fxrd-point-old
   "The last point"
@@ -333,9 +339,12 @@ Called by `fxrd-field-name-idle-timer'."
             (when validation-error
               ;; If not t, it's a validation error message
               (fxrd-maybe-set-modeline (format "%s:%s" field-name validation-error)))
-            (when (not (string= fxrd-field-value-old
-                                field-value))
-              (setq fxrd-field-value-old field-value)
+            (when (not (and (string= fxrd-field-value-old
+                                     field-value)
+                            (equal fxrd-field-boundaries-old
+                                   field-boundaries)))
+              (setq fxrd-field-value-old field-value
+                    fxrd-field-boundaries-old field-boundaries)
               (remove-overlays nil nil 'fxrd-current-overlay t)
               (let* ((begin (nth 0 field-boundaries))
                      (end (nth 1 field-boundaries))
