@@ -2,6 +2,7 @@
 ;;; We need lexical-binding so we can create closures.
 
 (require 'eieio-base)
+(require 's)
 
 (defclass fxrd-validator (eieio-named)
   (;; Public slots
@@ -66,10 +67,13 @@ specialized if necessary."
     (signal 'validation-error (format "nil value for field")))
   (let* ((comp-transform (slot-value val 'comp-transform))
          (val-for-comparison (funcall comp-transform field-value))
+         (align (slot-value val 'align))
+         (trimmed-val (cond ((string= align "RIGHT")
+                             (s-trim-left field-value))
+                            (t (s-trim-right field-value))))
          (const (slot-value val 'const))
          (enum (slot-value val 'enum))
          (const-eq (slot-value val 'const-eq))
-         (align (slot-value val 'align))
          (pad (slot-value val 'pad))
          (regex (slot-value val 'regex))
          (regex-w-pad (cond ((string= align "RIGHT") (concat "^" pad "*" regex "$"))
@@ -77,8 +81,9 @@ specialized if necessary."
     (unless (string-match regex-w-pad field-value)
       (signal 'validation-error (format "Failed to match regex %s" regex-w-pad)))
     (when enum
-      (unless (member val-for-comparison enum)
-        ;; TODO: account for padding in enum comparison
+      (unless (or (member val-for-comparison enum)
+                  ;; Only works/necessary for strings
+                  (member trimmed-val enum))
         (signal 'validation-error (format "%s not one of enum values %s" val-for-comparison enum))))
     (when const
       (unless (funcall const-eq const val-for-comparison)

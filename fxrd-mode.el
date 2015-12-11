@@ -4,6 +4,7 @@
 
 ;; Author: Marc Sherry (msherry@gmail.com)
 ;; URL: https://github.com/msherry/fxrd-mode
+;; Package-Requires: ((s "1.2"))
 ;; Keywords: convenience
 
 
@@ -30,7 +31,7 @@
 ;;   the next and previous fields, respectively.
 ;; - C-. (`fxrd-next-error') moves to the next invalid field.
 
-;;; Installation:
+;; Installation:
 
 ;; Installation via MELPA is easiest.
 
