@@ -4,7 +4,7 @@
 Emacs major modes for working with fixed-field-width files (NACHA, TSO6, RM37,
 etc.)
 
-Copyright (C) 2015 Marc Sherry
+Copyright (C) 2015-2017 Marc Sherry
 
 ## Summary
 This package implements `fxrd-mode`, a major mode for editing files with fixed

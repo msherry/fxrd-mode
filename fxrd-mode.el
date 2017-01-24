@@ -1,6 +1,6 @@
 ;;; fxrd-mode.el --- Major mode for editing fixed field width files
 
-;; Copyright (C) 2015 Marc Sherry
+;; Copyright (C) 2015-2017 Marc Sherry
 
 ;; Author: Marc Sherry (msherry@gmail.com)
 ;; URL: https://github.com/msherry/fxrd-mode
@@ -40,6 +40,11 @@
 (defgroup fxrd nil
   "Major mode for editing fixed field width files"
   :group 'convenience)
+
+;; This changed around emacs 25
+(eval-when-compile
+  (when (not (boundp 'default-mode-line-format))
+    (defvar default-mode-line-format (default-value 'mode-line-format))))
 
 (defface fxrd-current-field-face
   '((t (:inherit highlight
