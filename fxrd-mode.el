@@ -219,7 +219,7 @@ buffer-substring, etc.) handle ranges."
                   (signal 'validator-error "Unknown validator type for field"))))
         (validation-error (cdr err))))))
 
-(defun fxrd-point-in-field-boundaries-p (field-boundaries)
+(defun fxrd-point-in-field-boundaries-p (field-boundaries cur-pos)
   "Returns t if the point is inside the given field-boundaries, nil otherwise."
   (let ((begin (nth 0 field-boundaries))
         (end (nth 1 field-boundaries)))
@@ -403,7 +403,7 @@ Called by `fxrd-field-name-idle-timer'."
              (let ((field-boundaries (current-field-boundaries)))
                (when (and field-boundaries
                           ;; Skip current field, it will be handled elsewhere
-                          (not (fxrd-point-in-field-boundaries-p field-boundaries))
+                          (not (fxrd-point-in-field-boundaries-p field-boundaries cur-pos))
                           ;; Field not valid
                           (not (fxrd-current-field-valid-p)))
                  (let* ((begin (nth 0 field-boundaries))
