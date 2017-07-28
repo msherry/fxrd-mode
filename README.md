@@ -1,4 +1,5 @@
 [![MELPA](https://melpa.org/packages/fxrd-mode-badge.svg)](https://melpa.org/#/fxrd-mode)
+[![Melpa Stable Status](http://melpa-stable.milkbox.net/packages/fxrd-mode-badge.svg)](http://melpa-stable.milkbox.net/#/fxrd-mode)
 
 # fxrd-mode
 Emacs major modes for working with fixed-field-width files (NACHA, TSO6, RM37,
