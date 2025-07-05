@@ -2,8 +2,8 @@
 ;;; We need lexical-binding so we can create closures.
 
 (require 'eieio-base)
-(require 'eieio-compat)
 (require 's)
+(require 'cl-lib)
 
 (defclass fxrd-validator (eieio-named)
   (;; Public slots
@@ -50,7 +50,7 @@
    (regex :initform "^.*$"
           :documentation "Regex to validate field against"))
   "The base validator class for all field validation types")
-(defmethod fxrd-validate (val field)
+(cl-defmethod fxrd-validate (val field)
   "Validate the field with the given validator"
   (fxrd-general-validator val field))
 
@@ -97,7 +97,7 @@ specialized if necessary."
    (comp-transform :initform #'string-to-number)
    (regex :initform "[[:digit:]]*"))
   "Integer fields")
-(defmethod fxrd-validate :after ((val fxrd-numeric-v) field-value)
+(cl-defmethod fxrd-validate :after ((val fxrd-numeric-v) field-value)
   (let ((value (funcall (slot-value val 'comp-transform) field-value))
         (min (slot-value val 'min))
         (max (slot-value val 'max)))
