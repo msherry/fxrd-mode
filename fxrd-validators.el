@@ -2,6 +2,7 @@
 ;;; We need lexical-binding so we can create closures.
 
 (require 'eieio-base)
+(require 'eieio-compat)
 (require 's)
 
 (defclass fxrd-validator (eieio-named)
